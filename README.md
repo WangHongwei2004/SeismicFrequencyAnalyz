@@ -114,4 +114,4 @@ python -m PyInstaller SeismicFrequencyAnalyzer.spec --noconfirm
 
 ## 开源说明
 
-本项目使用 MIT License。提交到 GitHub 时，建议提交源码、README、requirements、LICENSE 和必要示例数据；`build/`、`dist/`、`__pycache__/`、分析输出图和 CSV 属于生成物，默认通过 `.gitignore` 排除。
+本项目使用 MIT License。
