@@ -880,9 +880,11 @@ def run_analysis(
     if not data_dir.exists():
         raise FileNotFoundError(f"数据目录不存在: {data_dir}")
 
-    txt_files = sorted(data_dir.glob("*.txt"))
-    if not txt_files:
-        raise FileNotFoundError(f"数据目录中未找到 TXT 文件: {data_dir}")
+    input_files = sorted(
+        list(data_dir.glob("*.txt")) + list(data_dir.glob("*.dat"))
+    )
+    if not input_files:
+        raise FileNotFoundError(f"数据目录中未找到 TXT/DAT 文件: {data_dir}")
 
     if min_peak_frequency < 0:
         raise ValueError("--min-peak-frequency 不能小于 0。")
@@ -902,9 +904,9 @@ def run_analysis(
 
     all_component_results: list[ComponentResult] = []
     figure_paths: list[Path] = []
-    for index, file_path in enumerate(txt_files, start=1):
+    for index, file_path in enumerate(input_files, start=1):
         if progress_callback is not None:
-            progress_callback(f"[{index}/{len(txt_files)}] 处理 {file_path.name}")
+            progress_callback(f"[{index}/{len(input_files)}] 处理 {file_path.name}")
         component_results, file_figure_paths = process_file(
             file_path,
             output_dir,

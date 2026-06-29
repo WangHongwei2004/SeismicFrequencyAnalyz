@@ -228,10 +228,10 @@ class MainWindow(QMainWindow):
         # 操作按钮
         btn_layout = QHBoxLayout()
         btn_layout.setSpacing(10)
-        self.evt_run_button = QPushButton("裁剪并导出 DAT")
+        self.evt_run_button = QPushButton("裁剪并导出 TXT")
         self.evt_run_button.setObjectName("primaryButton")
         self.evt_run_button.clicked.connect(self._run_evt_preprocess)
-        self.evt_open_button = QPushButton("打开 DAT 输出目录")
+        self.evt_open_button = QPushButton("打开数据目录")
         self.evt_open_button.setObjectName("secondaryButton")
         self.evt_open_button.setEnabled(False)
         self.evt_open_button.clicked.connect(self._open_evt_output_dir)
@@ -457,8 +457,8 @@ class MainWindow(QMainWindow):
         sr_idx = self.sample_rate_combo.currentIndex()
         instrument_sr = _SAMPLE_RATE_OPTIONS[sr_idx][1]
 
-        # 输出目录
-        output_dir = self.project_dir / "evt_dat_output"
+        # 输出目录：直接放到 data 目录下，方便频谱分析直接读取
+        output_dir = self.project_dir / "data"
         output_dir.mkdir(exist_ok=True)
 
         self.log_edit.clear()
@@ -494,14 +494,16 @@ class MainWindow(QMainWindow):
         self.evt_thread.finished.connect(self._evt_thread_done)
         self.evt_thread.start()
 
-    def _evt_finished(self, output_dir: str, dat_path: str,
+    def _evt_finished(self, output_dir: str, txt_path: str,
                       results: dict) -> None:
         self._append_log("")
-        self._append_log("=== 预处理完成，已导出三分量 DAT 文件 ===")
-        self._append_log(f"  DAT 文件: {Path(dat_path).name}")
+        self._append_log("=== 预处理完成，已导出三分量 TXT 文件 ===")
+        self._append_log(f"  TXT 文件: {Path(txt_path).name}")
         self._append_log(f"  {results['sample_count']} 点/分量 @ {results['sample_rate']:.1f} Hz")
         self._append_log(f"  综合得分: {results['score']:.4f}")
         self._append_log(f"  EW={results['ew_score']:.4f} NS={results['ns_score']:.4f} UD={results['ud_score']:.4f}")
+        self._append_log("")
+        self._append_log("提示: 输出的 TXT 文件已放到 data/ 目录，可直接用于频谱分析。")
 
     def _evt_failed(self, message: str) -> None:
         self._append_log(message)
