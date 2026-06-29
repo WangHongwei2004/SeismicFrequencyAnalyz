@@ -82,8 +82,8 @@ class MainWindow(QMainWindow):
         self.evt_output_dir: Path | None = None  # 记录预处理输出目录
 
         self.setWindowTitle(f"{_APP_TITLE} {APP_VERSION}")
-        self.resize(1200, 980)
-        self.setMinimumSize(1080, 880)
+        self.resize(1280, 1020)
+        self.setMinimumSize(1080, 920)
         self._build_menu()
         self._build_ui()
         self._apply_style()

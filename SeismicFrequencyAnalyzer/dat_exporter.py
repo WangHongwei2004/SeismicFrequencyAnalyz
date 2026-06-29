@@ -25,7 +25,6 @@ def export_three_component_dat(
     start_sample_index: int,
     end_sample_index: int,
     original_file: str = "",
-    original_sample_rate_hz: float | None = None,
     record_time: str = "",
     extra_metadata: dict[str, Any] | None = None,
 ) -> Path:
@@ -38,15 +37,13 @@ def export_three_component_dat(
     output_path : str or Path
         输出文件路径。
     sample_rate_hz : float
-        采样率（地震仪实际采样率）。
+        采样率（用户设置的地震仪实际采样率）。
     start_sample_index : int
-        截取起始点号（相对于原始文件）。
+        截取起始点号（相对于原始文件全帧）。
     end_sample_index : int
         截取结束点号（不含）。
     original_file : str
         原始 EVT 文件名。
-    original_sample_rate_hz : float or None
-        原始文件采样率（若重采样过则不同）。
     record_time : str
         原始数据记录时间。
     extra_metadata : dict or None
@@ -62,15 +59,8 @@ def export_three_component_dat(
     n_samples = min(len(ew_data), len(ns_data), len(ud_data))
     duration_s = n_samples / sample_rate_hz
 
-    if original_sample_rate_hz is not None:
-        start_time_s = start_sample_index / original_sample_rate_hz
-        end_time_s = end_sample_index / original_sample_rate_hz
-    else:
-        start_time_s = 0.0
-        end_time_s = duration_s
-
-    if original_sample_rate_hz is None:
-        original_sample_rate_hz = sample_rate_hz
+    start_time_s = start_sample_index / sample_rate_hz
+    end_time_s = end_sample_index / sample_rate_hz
 
     # 构建元信息字符串（嵌入第一个分量头）
     extra_parts = []
@@ -78,7 +68,6 @@ def export_three_component_dat(
         extra_parts.append(f"Original: {original_file}")
     if record_time:
         extra_parts.append(f"RecordTime: {record_time}")
-    extra_parts.append(f"OriginalSR: {original_sample_rate_hz:.4f}")
     extra_parts.append(f"StartIdx: {start_sample_index}")
     extra_parts.append(f"EndIdx: {end_sample_index}")
     extra_parts.append(f"StartTime: {start_time_s:.6f}s")
@@ -99,7 +88,7 @@ def export_three_component_dat(
         (2, "EW", ew_data),
     ]
 
-    for idx, (comp_idx, comp_name, comp_data) in enumerate(components):
+    for idx, (comp_idx, _comp_name, comp_data) in enumerate(components):
         if idx == 0:
             # 第一个分量头包含所有元信息
             lines.append(

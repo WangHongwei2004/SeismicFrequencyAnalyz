@@ -34,8 +34,6 @@ class EvtHeader:
     """经度（度）"""
     elevation_m: float
     """高程（米）"""
-    sample_rate_hz: float
-    """采样率（Hz），从数据段头中读取"""
     component_count: int
     """分量数"""
     data_format: int
@@ -63,14 +61,6 @@ class EvtData:
     @property
     def sample_count(self) -> int:
         return int(self.ew.size)
-
-    @property
-    def duration_s(self) -> float:
-        return self.sample_count / self.header.sample_rate_hz
-
-    @property
-    def time_s(self) -> np.ndarray:
-        return np.arange(self.sample_count, dtype=float) / self.header.sample_rate_hz
 
 
 # ── 解析函数 ──────────────────────────────────────────────────────
@@ -138,9 +128,6 @@ def read_evt(file_path: str | Path) -> EvtData:
     # 高程（0x84 起）
     elevation_m = struct.unpack_from("<f", data, 0x84)[0]
 
-    # ── 查找第一个分量段头，获取采样率 ──
-    sample_rate_hz = _find_sample_rate(data)
-
     # ── 查找数据区起始位置 ──
     data_start_offset = _find_data_start(data)
 
@@ -165,7 +152,6 @@ def read_evt(file_path: str | Path) -> EvtData:
         latitude=latitude,
         longitude=longitude,
         elevation_m=elevation_m,
-        sample_rate_hz=sample_rate_hz,
         component_count=3,
         data_format=fmt_flag,
         record_time=record_time,
@@ -216,29 +202,6 @@ def _parse_evt_time(
         pass
 
     return None
-
-
-def _find_sample_rate(data: bytes) -> float:
-    """从分量段头中提取采样率。"""
-    # 搜索 'E-W' 分量段头，其 +20 字节处为 float 采样率
-    ew_pos = data.find(b"E-W")
-    if ew_pos >= 4:
-        seg_start = ew_pos - 4  # 段头起始
-        if seg_start + 24 <= len(data):
-            sr = struct.unpack_from("<f", data, seg_start + 20)[0]
-            if 10.0 < sr < 10000.0:
-                return sr
-
-    # 备选：搜索 'N-S' 分量段头
-    ns_pos = data.find(b"N-S")
-    if ns_pos >= 4:
-        seg_start = ns_pos - 4
-        if seg_start + 24 <= len(data):
-            sr = struct.unpack_from("<f", data, seg_start + 20)[0]
-            if 10.0 < sr < 10000.0:
-                return sr
-
-    return 100.0  # 默认 100 Hz
 
 
 def _find_data_start(data: bytes) -> int:

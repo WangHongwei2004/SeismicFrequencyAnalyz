@@ -10,7 +10,7 @@ from pathlib import Path
 APP_VERSION = "v1.1.0"
 APP_AUTHOR = "WHW"
 APP_COMPLETION_DATE = "2026.6.27"
-APP_GITHUB_URL = "https://github.com/WangHongwei2004"
+APP_GITHUB_URL = "https://github.com/WangHongwei2004/SeismicFrequencyAnalyzer"
 
 DEFAULT_MIN_PEAK_FREQUENCY_HZ = 0.0
 DEFAULT_MAX_PEAK_FREQUENCY_HZ = 0.0
