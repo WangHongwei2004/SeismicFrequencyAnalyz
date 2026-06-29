@@ -6,7 +6,12 @@ a = Analysis(
     pathex=['SeismicFrequencyAnalyzer'],
     binaries=[],
     datas=[],
-    hiddenimports=[],
+    hiddenimports=[
+        'evt_reader',
+        'segment_selector',
+        'dat_exporter',
+        'evt_preprocess_worker',
+    ],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
