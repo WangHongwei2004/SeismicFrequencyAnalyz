@@ -82,8 +82,8 @@ class MainWindow(QMainWindow):
         self.evt_output_dir: Path | None = None  # 记录预处理输出目录
 
         self.setWindowTitle(f"{_APP_TITLE} {APP_VERSION}")
-        self.resize(1400, 1100)
-        self.setMinimumSize(1100, 950)
+        self.resize(1460, 1180)
+        self.setMinimumSize(1100, 1000)
         self._build_menu()
         self._build_ui()
         self._apply_style()
@@ -223,7 +223,16 @@ class MainWindow(QMainWindow):
         comp_label.setStyleSheet("color: #526070; font-size: 12px;")
         comp_layout.addWidget(comp_label)
         comp_layout.addStretch()
-        layout.addLayout(comp_layout, 3, 0, 1, 3)
+        layout.addLayout(comp_layout, 4, 0, 1, 3)
+
+        # 滑动步长
+        layout.addWidget(QLabel("滑动步长"), 3, 0)
+        self.step_combo = QComboBox()
+        step_options = [("自动 (窗口/4)", None), ("128 点", 128), ("256 点", 256), ("512 点", 512)]
+        for label, val in step_options:
+            self.step_combo.addItem(label)
+        self.step_combo.setCurrentIndex(0)  # 默认自动
+        layout.addWidget(self.step_combo, 3, 1)
 
         # 操作按钮
         btn_layout = QHBoxLayout()
@@ -238,7 +247,7 @@ class MainWindow(QMainWindow):
         btn_layout.addWidget(self.evt_run_button)
         btn_layout.addWidget(self.evt_open_button)
         btn_layout.addStretch()
-        layout.addLayout(btn_layout, 4, 0, 1, 3)
+        layout.addLayout(btn_layout, 5, 0, 1, 3)
 
         return group
 
@@ -282,7 +291,7 @@ class MainWindow(QMainWindow):
         min_peak_default, max_peak_default = load_default_peak_settings()
         self.min_peak_spin = self._make_frequency_spin(min_peak_default)
         self.max_peak_spin = self._make_frequency_spin(max_peak_default)
-        self.plot_max_spin = self._make_frequency_spin(0.0)
+        self.plot_max_spin = self._make_frequency_spin(15.0)
         self.processing_points_spin = self._make_point_count_spin()
         settings_items = [
             ("选峰下限 Hz", self.min_peak_spin),
@@ -457,6 +466,11 @@ class MainWindow(QMainWindow):
         sr_idx = self.sample_rate_combo.currentIndex()
         instrument_sr = _SAMPLE_RATE_OPTIONS[sr_idx][1]
 
+        # 滑动步长
+        step_idx = self.step_combo.currentIndex()
+        step_options = [None, 128, 256, 512]
+        step = step_options[step_idx]
+
         # 输出目录：直接放到 data 目录下，方便频谱分析直接读取
         output_dir = self.project_dir / "data"
         output_dir.mkdir(exist_ok=True)
@@ -465,7 +479,7 @@ class MainWindow(QMainWindow):
         self._append_log("=== EVT 预处理 ===")
         self._append_log(f"输入文件: {evt_path}")
         self._append_log(f"窗口大小: {window_size} 点")
-        self._append_log(f"地震仪采样率: {instrument_sr:.0f} Hz | 窗口大小: {window_size} 点")
+        self._append_log(f"地震仪采样率: {instrument_sr:.0f} Hz | 窗口大小: {window_size} 点 | 步长: {step if step else 'auto'}")
         self._append_log("分量: EW + NS + UD（三分量联合筛选）")
         self._append_log(f"输出目录: {output_dir}")
         self._append_log("")
@@ -483,6 +497,7 @@ class MainWindow(QMainWindow):
             output_dir=output_dir,
             window_size=window_size,
             instrument_sample_rate_hz=instrument_sr,
+            step=step,
         )
         self.evt_worker.moveToThread(self.evt_thread)
         self.evt_thread.started.connect(self.evt_worker.run)

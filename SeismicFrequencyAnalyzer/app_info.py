@@ -12,8 +12,8 @@ APP_AUTHOR = "WHW"
 APP_COMPLETION_DATE = "2026.6.27"
 APP_GITHUB_URL = "https://github.com/WangHongwei2004/SeismicFrequencyAnalyzer"
 
-DEFAULT_MIN_PEAK_FREQUENCY_HZ = 0.0
-DEFAULT_MAX_PEAK_FREQUENCY_HZ = 0.0
+DEFAULT_MIN_PEAK_FREQUENCY_HZ = 1.0
+DEFAULT_MAX_PEAK_FREQUENCY_HZ = 8.0
 
 
 def load_default_peak_settings() -> tuple[float, float]:

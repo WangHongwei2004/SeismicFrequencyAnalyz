@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """EVT 预处理后台工作线程。
 
-read_evt() 已完成：int32 顺序三块解析 + 前导切除。
+read_evt() 已完成：50-block 解码 + 前导切除。
 此Worker：读取 → 联合搜索 → 导出 TXT（兼容现有频谱分析）。
 """
 
@@ -30,12 +30,14 @@ class EvtPreprocessWorker(QObject):
         output_dir: Path,
         window_size: int,
         instrument_sample_rate_hz: float,
+        step: int | None = None,
     ) -> None:
         super().__init__()
         self.evt_path = evt_path
         self.output_dir = output_dir
         self.window_size = window_size
         self.instrument_sample_rate_hz = instrument_sample_rate_hz
+        self.step = step
 
     def run(self) -> None:
         try:
@@ -64,25 +66,32 @@ class EvtPreprocessWorker(QObject):
             ud = evt.ud
 
             # 三分量联合搜索最优窗口
-            self.log.emit("三分量联合搜索最优数据段...")
+            step_label = f"步长={self.step}" if self.step else "步长=auto"
+            self.log.emit(f"三分量联合搜索最优数据段 (窗口={self.window_size}, {step_label})...")
             result = find_best_segment_three_component(
                 ew=ew, ns=ns, ud=ud,
                 window_size=self.window_size,
                 sample_rate_hz=self.instrument_sample_rate_hz,
+                step=self.step,
                 progress_callback=self.log.emit,
             )
             bw = result.best_window
 
+            # 计算截取起始时间（秒）
+            start_time_s = bw.start_index / self.instrument_sample_rate_hz
+
             self.log.emit(
                 f"  最优窗口: [{bw.start_index}, {bw.end_index}) "
+                f"({start_time_s:.1f}s 起) "
                 f"综合={bw.total_score:.4f} "
                 f"EW={bw.ew_score:.4f} NS={bw.ns_score:.4f} "
                 f"UD={bw.ud_score:.4f}"
             )
 
-            # 导出为 txt —— 兼容现有频谱分析
+            # 导出为 txt — 文件名: {原数据名}_{开始时间}s.txt
             base_name = self.evt_path.stem
-            txt_path = self.output_dir / f"{base_name}.txt"
+            txt_name = f"{base_name}_{start_time_s:.1f}s.txt"
+            txt_path = self.output_dir / txt_name
 
             export_three_component_dat(
                 ew_data=result.ew_data,
