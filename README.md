@@ -232,5 +232,3 @@ python -m PyInstaller SeismicFrequencyAnalyzer.spec --noconfirm
 未经作者书面授权，不允许将本软件或其衍生版本用于商业产品、商业服务、付费咨询、付费培训、商业数据处理、商业工作流集成、转售、租赁、再许可或其他以商业利益为主要目的的场景。
 
 如需商业授权，请通过作者 GitHub 主页联系：<https://github.com/WangHongwei2004>。
-
-提交到 GitHub 时，建议提交源码、README、requirements、LICENSE 和必要占位文件；`build/`、`dist/`、`__pycache__/`、原始数据、分析输出图和 CSV 属于本地文件或生成物，默认通过 `.gitignore` 排除。
