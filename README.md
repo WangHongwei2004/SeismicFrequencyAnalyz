@@ -44,7 +44,6 @@
 
 杞欢涓荤晫闈紙v1.1.0锛夊寘鍚?EVT 棰勫鐞嗛潰鏉裤€侀璋卞垎鏋愯矾寰勪笌鍙傛暟銆佽繍琛屾棩蹇楋細
 
-> 涓荤晫闈㈡埅鍥捐椤圭洰 `docs/` 鐩綍鎴?GitHub Release 椤甸潰闄勫浘銆?
 ---
 
 ## 椤圭洰缁撴瀯
@@ -61,9 +60,6 @@
 鈹?  鈹溾攢鈹€ analysis_worker.py                      # 鍚庡彴棰戣氨鍒嗘瀽绾跨▼
 鈹?  鈹溾攢鈹€ evt_preprocess_worker.py                # 鍚庡彴 EVT 鎵归噺棰勫鐞嗙嚎绋嬶紙v1.1.0锛?鈹?  鈹溾攢鈹€ evt_reader.py                           # EDAS EVT 浜岃繘鍒舵牸寮忚В鏋愬櫒锛坴1.1.0锛?鈹?  鈹溾攢鈹€ segment_selector.py                     # 鏈€浼樻暟鎹鑷姩绛涢€夌畻娉曪紙v1.1.0锛?鈹?  鈹溾攢鈹€ dat_exporter.py                         # DAT/TXT 鏍煎紡瀵煎嚭妯″潡锛坴1.1.0锛?鈹?  鈹溾攢鈹€ app_info.py                             # 杞欢鐗堟湰銆佷綔鑰呭拰榛樿閰嶇疆
 鈹?  鈹溾攢鈹€ dominant_frequency_two_methods.py       # 鐩存帴娉?闂存帴娉曚富鍒嗘瀽娴佺▼
-鈹?  鈹溾攢鈹€ ui_style.py                             # 鐣岄潰鏍峰紡琛?鈹?  鈹溾攢鈹€ data/                                   # 鏈湴鏁版嵁鐩綍锛圱XT + EVT 瑁佸壀杈撳嚭锛?鈹?  鈹斺攢鈹€ two_method_spectrum_output/             # 棰戣氨鍒嗘瀽缁撴灉锛堝浘 + CSV锛?鈹溾攢鈹€ tools/
-鈹?  鈹斺攢鈹€ generate_copyright_docs.py              # 杞憲鏂囨。鐢熸垚宸ュ叿
-鈹溾攢鈹€ docs/                                       # 杞憲鏂囨。涓庢埅鍥?鈹溾攢鈹€ build/                                      # PyInstaller 鏋勫缓缂撳瓨锛堜笉鎻愪氦锛?鈹斺攢鈹€ dist/                                       # 鎵撳寘鍚庣殑 exe锛堝彂甯冩椂鍗曠嫭涓婁紶锛?```
 
 ---
 

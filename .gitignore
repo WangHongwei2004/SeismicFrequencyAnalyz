@@ -34,3 +34,8 @@ SeismicFrequencyAnalyzer/data/*
 Thumbs.db
 .DS_Store
 .cc-connect/
+
+# Local release artifacts and private project materials
+release/
+docs/
+tools/
