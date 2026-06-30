@@ -67,6 +67,18 @@ _SAMPLE_RATE_OPTIONS = [
 ]
 
 
+def _collect_evt_paths(evt_input: Path) -> list[Path]:
+    """收集单个 EVT 文件或目录下的所有 EVT 文件。"""
+    if evt_input.is_file():
+        return [evt_input] if evt_input.suffix.lower() == ".evt" else []
+
+    return sorted(
+        path
+        for path in evt_input.rglob("*")
+        if path.is_file() and path.suffix.lower() == ".evt"
+    )
+
+
 class MainWindow(QMainWindow):
     def __init__(self) -> None:
         super().__init__()
@@ -173,16 +185,22 @@ class MainWindow(QMainWindow):
         layout.setHorizontalSpacing(14)
         layout.setVerticalSpacing(12)
 
-        # EVT 文件选择
+        # EVT 文件/目录选择
         self.evt_path_edit = QLineEdit()
-        self.evt_path_edit.setPlaceholderText("选择 .evt 原始数据文件...")
-        evt_browse = QPushButton("浏览...")
+        self.evt_path_edit.setPlaceholderText("选择 .evt 原始数据文件 或 包含 .evt 文件的目录...")
+        evt_browse = QPushButton("浏览文件...")
         evt_browse.setObjectName("secondaryButton")
         evt_browse.clicked.connect(self._choose_evt_file)
+        evt_browse_dir = QPushButton("浏览目录...")
+        evt_browse_dir.setObjectName("secondaryButton")
+        evt_browse_dir.clicked.connect(self._choose_evt_dir)
 
-        layout.addWidget(QLabel("EVT 文件"), 0, 0)
+        layout.addWidget(QLabel("EVT 文件/目录"), 0, 0)
         layout.addWidget(self.evt_path_edit, 0, 1)
-        layout.addWidget(evt_browse, 0, 2)
+        evt_btn_layout = QHBoxLayout()
+        evt_btn_layout.addWidget(evt_browse)
+        evt_btn_layout.addWidget(evt_browse_dir)
+        layout.addLayout(evt_btn_layout, 0, 2)
 
         # 窗口大小
         layout.addWidget(QLabel("截取长度"), 1, 0)
@@ -433,6 +451,13 @@ class MainWindow(QMainWindow):
         if file_path:
             self.evt_path_edit.setText(file_path)
 
+    def _choose_evt_dir(self) -> None:
+        directory = QFileDialog.getExistingDirectory(
+            self, "选择包含 EVT 文件的目录", str(self.project_dir)
+        )
+        if directory:
+            self.evt_path_edit.setText(directory)
+
     def _choose_data_dir(self) -> None:
         directory = QFileDialog.getExistingDirectory(
             self, "选择数据目录", self.data_dir_edit.text()
@@ -450,9 +475,19 @@ class MainWindow(QMainWindow):
     # ── EVT 预处理 ─────────────────────────────────────────────────
 
     def _run_evt_preprocess(self) -> None:
-        evt_path = Path(self.evt_path_edit.text()).expanduser()
-        if not evt_path.exists():
-            QMessageBox.warning(self, "文件不存在", f"找不到文件:\n{evt_path}")
+        evt_input = Path(self.evt_path_edit.text()).expanduser()
+        if not evt_input.exists():
+            QMessageBox.warning(self, "路径不存在", f"找不到文件或目录:\n{evt_input}")
+            return
+
+        # 收集 EVT 文件列表（单文件或目录递归批量）
+        evt_paths = _collect_evt_paths(evt_input)
+        if not evt_paths:
+            if evt_input.is_file():
+                message = f"请选择 .evt 文件:\n{evt_input}"
+            else:
+                message = f"目录及其子目录中没有 .evt 文件:\n{evt_input}"
+            QMessageBox.warning(self, "未找到 EVT 文件", message)
             return
 
         # 窗口大小
@@ -477,7 +512,7 @@ class MainWindow(QMainWindow):
 
         self.log_edit.clear()
         self._append_log("=== EVT 预处理 ===")
-        self._append_log(f"输入文件: {evt_path}")
+        self._append_log(f"输入: {evt_input} ({len(evt_paths)} 个 EVT 文件)")
         self._append_log(f"窗口大小: {window_size} 点")
         self._append_log(f"地震仪采样率: {instrument_sr:.0f} Hz | 窗口大小: {window_size} 点 | 步长: {step if step else 'auto'}")
         self._append_log("分量: EW + NS + UD（三分量联合筛选）")
@@ -493,7 +528,7 @@ class MainWindow(QMainWindow):
 
         self.evt_thread = QThread(self)
         self.evt_worker = EvtPreprocessWorker(
-            evt_path=evt_path,
+            evt_paths=evt_paths,
             output_dir=output_dir,
             window_size=window_size,
             instrument_sample_rate_hz=instrument_sr,
@@ -509,14 +544,21 @@ class MainWindow(QMainWindow):
         self.evt_thread.finished.connect(self._evt_thread_done)
         self.evt_thread.start()
 
-    def _evt_finished(self, output_dir: str, txt_path: str,
-                      results: dict) -> None:
+    def _evt_finished(self, output_dir: str, txt_paths: list,
+                      results_list: list) -> None:
         self._append_log("")
         self._append_log("=== 预处理完成，已导出三分量 TXT 文件 ===")
-        self._append_log(f"  TXT 文件: {Path(txt_path).name}")
-        self._append_log(f"  {results['sample_count']} 点/分量 @ {results['sample_rate']:.1f} Hz")
-        self._append_log(f"  综合得分: {results['score']:.4f}")
-        self._append_log(f"  EW={results['ew_score']:.4f} NS={results['ns_score']:.4f} UD={results['ud_score']:.4f}")
+        for txt_path, results in zip(txt_paths, results_list):
+            self._append_log(f"  {Path(txt_path).name}")
+            self._append_log(
+                f"    {results['sample_count']} 点/分量 @ "
+                f"{results['sample_rate']:.1f} Hz | 综合得分: {results['score']:.4f}"
+            )
+            self._append_log(
+                f"    EW={results['ew_score']:.4f} "
+                f"NS={results['ns_score']:.4f} "
+                f"UD={results['ud_score']:.4f}"
+            )
         self._append_log("")
         self._append_log("提示: 输出的 TXT 文件已放到 data/ 目录，可直接用于频谱分析。")
 

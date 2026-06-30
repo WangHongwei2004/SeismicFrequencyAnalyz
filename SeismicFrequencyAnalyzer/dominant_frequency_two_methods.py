@@ -24,7 +24,6 @@ import numpy as np
 
 
 INSTRUMENT_RESPONSE = 420.0
-UM_PER_METER = 1_000_000.0
 
 # 卓越频率只在这个频段内选取。0 表示不设对应边界。
 # 例如只在 10-20 Hz 内找峰值：PEAK_SEARCH_MIN_FREQUENCY_HZ = 10.0,
@@ -270,7 +269,7 @@ def corrected_acceleration_um_s2(trace: Trace) -> np.ndarray:
     acceleration = remove_instrument_response(trace.raw_counts)
     acceleration = acceleration - np.mean(acceleration)
     acceleration = remove_linear_drift(acceleration)
-    return acceleration * UM_PER_METER
+    return acceleration
 
 
 def direct_power_spectrum(values: np.ndarray, sample_rate_hz: float) -> tuple[np.ndarray, np.ndarray, np.ndarray, float]:
